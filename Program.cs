@@ -1,9 +1,11 @@
 ﻿using System;
+using System.IO;
 
 namespace RenameSubtitles{
     class Program{
         static void Main(string[] args){
-            Console.WriteLine("Hello World!");
+            RenameSubtitle renameSubtitle = new RenameSubtitle();
+            renameSubtitle.doWork(args);
         }
     }
 }
