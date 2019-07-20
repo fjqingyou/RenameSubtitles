@@ -164,7 +164,11 @@ public class RenameSubtitle{
                 //重命名字幕文件
                 File.Move(originFilePath, targetFilePath);
             }
+            Console.WriteLine("任务完成！");
         }
+        
+        Console.WriteLine("按任意键退出");
+        Console.ReadKey();
     }
 
     /// <summary>
