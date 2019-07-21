@@ -175,8 +175,9 @@ public class RenameSubtitle{
 
             Console.Write("请确认上方的文件映射关系，确认无误输入Y确定重命名，其他字符取消本次操作，您的选择是？：");
             ConsoleKeyInfo keyInfo = Console.ReadKey();
+            Console.WriteLine("\n");//输出一下空白行
             if(keyInfo.KeyChar != 'y' && keyInfo.KeyChar != 'Y'){
-                Console.WriteLine("\n用户放弃本次操作！");
+                Console.WriteLine("用户放弃本次操作！");
             }else{
                 for(int i = 0 ; i < this.assetMatchList.Count; i++){
                     AssetMatch matchAsset = this.assetMatchList[i];
@@ -197,9 +198,15 @@ public class RenameSubtitle{
                     string targetFilePath = Path.Combine(this.targetDirectory, targetFileName);
 
                     //重命名字幕文件
-                    File.Move(originFilePath, targetFilePath);
+                    if(!originFilePath.Equals(targetFilePath, StringComparison.OrdinalIgnoreCase)){//如果确实发生了改变
+                        if(!File.Exists(originFilePath)){
+                            Console.WriteLine("文件未重命名就已经不存在了：\n视频：{0}\n字幕：{1}\n", videoAssetFile.fileName, subtitleAssetFile.fileName);
+                        }else{
+                            File.Move(originFilePath, targetFilePath);
+                        }
+                    }
                 }
-                Console.WriteLine("\n任务完成！");
+                Console.WriteLine("任务完成！");
             }
         }
     }
