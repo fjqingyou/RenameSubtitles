@@ -7,14 +7,32 @@
             "type": "process",
             "args": [
                 "build",
-                "-r",//this is build win platform
-                "win-x64",//this is build win platform
+                "${workspaceFolder}/RenameSubtitles.csproj"
+            ],
+            "problemMatcher": "$tsc"
+        },
+        {
+            "label": "build win-x64",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
                 "${workspaceFolder}/RenameSubtitles.csproj"
             ],
             "problemMatcher": "$tsc"
         },
         {
             "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/RenameSubtitles.csproj"
+            ],
+            "problemMatcher": "$tsc"
+        },
+        {
+            "label": "publish win-x64",
             "command": "dotnet",
             "type": "process",
             "args": [

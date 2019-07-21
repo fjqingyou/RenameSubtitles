@@ -23,75 +23,106 @@ public class RenameSubtitle{
 
     public void doWork(string [] args){
         try{
-            if(checkDirectory(args)){//检测文件夹
-                FileClassification();//文件分类
+            //收集资源文件
+            CollectAssetFile(args);
+            
+            //收集文件名中，出现数字的范围
+            CollectAssetFileNumberRanage(this.videoFileList);//收集视频文件数字范围
+            CollectAssetFileNumberRanage(this.subtitleFileList);//收集字幕文件数字范围
 
-                //收集文件名中，出现数字的范围
-                CollectAssetFileNumberRanage(this.videoFileList);//收集视频文件数字范围
-                CollectAssetFileNumberRanage(this.subtitleFileList);//收集字幕文件数字范围
+            //初始化范围权重
+            this.InitAssetFileRangeWeight(this.videoFileList, this.videoFileRangeWeightList);
+            this.InitAssetFileRangeWeight(this.subtitleFileList, this.subtitleFileRangeWeightList);
+            
+            //初始化资源文件的模板范围文本的数字
+            this.initAssetsFileTargetRangeTextNumber(this.videoFileList, this.videoFileRangeWeightList);
+            this.initAssetsFileTargetRangeTextNumber(this.subtitleFileList, this.subtitleFileRangeWeightList);
 
-                //初始化范围权重
-                this.InitAssetFileRangeWeight(this.videoFileList, this.videoFileRangeWeightList);
-                this.InitAssetFileRangeWeight(this.subtitleFileList, this.subtitleFileRangeWeightList);
-                
-                //初始化资源文件的模板范围文本的数字
-                this.initAssetsFileTargetRangeTextNumber(this.videoFileList, this.videoFileRangeWeightList);
-                this.initAssetsFileTargetRangeTextNumber(this.subtitleFileList, this.subtitleFileRangeWeightList);
+            //对目标视频文件进行排序
+            this.SortVideoFile();
 
-                //对目标视频文件进行排序
-                this.SortVideoFile();
+            //匹配资源
+            this.MatchAsset();
 
-                //匹配资源
-                this.MatchAsset();
-
-                //准备执行重命名操作
-                this.DoRaname();
-            }
+            //准备执行重命名操作
+            this.DoRaname();
         }catch(Exception e){
             Console.WriteLine(e);
         }
+
+        //等待按键退出
+        this.WaitKeyExit();
     }
 
     /// <summary>
-    /// 检测文件夹
+    /// 收集资源文件
     /// </summary>
     /// <param name="args"></param>
     /// <returns></returns>
-    private bool checkDirectory(string [] args){
-        bool result = false;
-        targetDirectory = null;
+    private void CollectAssetFile(string [] args){
+        this.targetDirectory = null;
         if(args.Length < 1){
-            throw new Exception("请指定目录");
-        }else if(args.Length > 1){
-            throw new Exception("指定的参数过多，请指定一个目录就好");
+            throw new Exception("请指定目录，或者同时指定目标范围内的视频与字幕文件");
         }else{
             string targetDirectory = args[0];
-            if(!Directory.Exists(targetDirectory)){
-                throw new Exception("指定的参数不是目录");
-            }else{
+            if(args.Length == 1 && Directory.Exists(targetDirectory)){//如果只指定了一个参数，而且它是一个文件夹
                 this.targetDirectory = targetDirectory;
-                result = true;
+                
+                string [] files = Directory.GetFiles(targetDirectory);
+
+                //文件分类
+                FileClassification(files, videoFileList, videoFileTypeList);
+                FileClassification(files, subtitleFileList, subtitleFileTypeList);
+            }else{
+                bool allIsFile = true;
+                //那么这里就是多选了
+                for(int i = 0 ; i < args.Length; i++){
+                    if(!File.Exists(args[i])){
+                        allIsFile = false;
+                        break;
+                    }
+                }
+                if(!allIsFile){
+                    throw new Exception("指定了多个参数，但不是所有选择都是文件!");
+                }
+                
+                //如果全是文件，那么需要判断是不是在同一个文件夹下面
+                bool sameFolder = true;
+                targetDirectory = Path.GetDirectoryName(targetDirectory);
+                for(int i = 1 ; i < args.Length; i++){
+                    if(targetDirectory != Path.GetDirectoryName(args[i])){
+                        sameFolder = false;
+                        break;
+                    }
+                }
+
+                if(!sameFolder){//如果不是相同文件夹
+                    throw new Exception("选择的多个文件，不是全在同一个文件夹里面");
+                }
+
+                //成功校验
+                this.targetDirectory = targetDirectory;
+                
+                //文件分类
+                FileClassification(args, videoFileList, videoFileTypeList);
+                FileClassification(args, subtitleFileList, subtitleFileTypeList);
             }
         }
-        return result;
     }
 
     /// <summary>
     /// 文件分类
     /// </summary>
-    private void FileClassification(){
-        string [] files = Directory.GetFiles(targetDirectory);
+    private void FileClassification(string [] files, List<AssetFile> assetFileList, List<string> fileTypeList){
         for(int i = 0 ; i < files.Length; i++){
             string fileName = Path.GetFileName(files[i]);
             int dotIndex = fileName.LastIndexOf(".");
             if(dotIndex > -1){
                 string fileType = fileName.Substring(dotIndex + 1).ToLower();
-                AssetFile assetFile = new AssetFile();
-                assetFile.fileName = fileName;
-                if(videoFileTypeList.Contains(fileType)){//如果是视频
-                    videoFileList.Add(assetFile);
-                }else if(subtitleFileTypeList.Contains(fileType)){//如果是字幕文件
-                    subtitleFileList.Add(assetFile);
+                if(fileTypeList.Contains(fileType)){//如果目标资源文件
+                    AssetFile assetFile = new AssetFile();
+                    assetFile.fileName = fileName;
+                    assetFileList.Add(assetFile);
                 }
             }
         }
@@ -135,38 +166,48 @@ public class RenameSubtitle{
     /// 做重命名动作
     /// </summary>
     private void DoRaname(){
-        //输出匹配信息
-        this.PrintMatchList();
-
-        Console.WriteLine("请确认上方的文件映射关系，确认无误输入Y确定重命名，其他字符取消本次操作，您的选择是？：");
-        ConsoleKeyInfo keyInfo = Console.ReadKey();
-        if(keyInfo.KeyChar != 'y' && keyInfo.KeyChar != 'Y'){
-            Console.WriteLine("用户放弃本次操作！");
+        if(this.assetMatchList.Count < 1){
+            Console.WriteLine("没有找到匹配项");
         }else{
-            for(int i = 0 ; i < this.assetMatchList.Count; i++){
-                AssetMatch matchAsset = this.assetMatchList[i];
-                AssetFile videoAssetFile = matchAsset.video;
-                AssetFile subtitleAssetFile = matchAsset.subtitle;
 
-                //字幕文件扩展名
-                string subtitleExtFileName = Path.GetExtension(subtitleAssetFile.fileName);
+            //输出匹配信息
+            this.PrintMatchList();
 
-                //获取没有扩展名的视频文件名
-                string targetFileName = Path.GetFileNameWithoutExtension(videoAssetFile.fileName);
-                targetFileName += subtitleExtFileName;
-                
-                //原始文件路径
-                string originFilePath = Path.Combine(this.targetDirectory, subtitleAssetFile.fileName);
+            Console.WriteLine("请确认上方的文件映射关系，确认无误输入Y确定重命名，其他字符取消本次操作，您的选择是？：");
+            ConsoleKeyInfo keyInfo = Console.ReadKey();
+            if(keyInfo.KeyChar != 'y' && keyInfo.KeyChar != 'Y'){
+                Console.WriteLine("用户放弃本次操作！");
+            }else{
+                for(int i = 0 ; i < this.assetMatchList.Count; i++){
+                    AssetMatch matchAsset = this.assetMatchList[i];
+                    AssetFile videoAssetFile = matchAsset.video;
+                    AssetFile subtitleAssetFile = matchAsset.subtitle;
 
-                //目标文件路径
-                string targetFilePath = Path.Combine(this.targetDirectory, targetFileName);
+                    //字幕文件扩展名
+                    string subtitleExtFileName = Path.GetExtension(subtitleAssetFile.fileName);
 
-                //重命名字幕文件
-                File.Move(originFilePath, targetFilePath);
+                    //获取没有扩展名的视频文件名
+                    string targetFileName = Path.GetFileNameWithoutExtension(videoAssetFile.fileName);
+                    targetFileName += subtitleExtFileName;
+                    
+                    //原始文件路径
+                    string originFilePath = Path.Combine(this.targetDirectory, subtitleAssetFile.fileName);
+
+                    //目标文件路径
+                    string targetFilePath = Path.Combine(this.targetDirectory, targetFileName);
+
+                    //重命名字幕文件
+                    File.Move(originFilePath, targetFilePath);
+                }
+                Console.WriteLine("任务完成！");
             }
-            Console.WriteLine("任务完成！");
         }
-        
+    }
+
+    /// <summary>
+    /// 等待按键退出
+    /// </summary>
+    private void WaitKeyExit(){
         Console.WriteLine("按任意键退出");
         Console.ReadKey();
     }

@@ -11,11 +11,25 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/netcoreapp2.2/RenameSubtitles.dll",
-            "args": [],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
             "console": "integratedTerminal",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "args": [
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 01 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 02 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 03 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 04 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 05 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 06 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 07 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 08 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 09 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 10 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 11 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - 12 (BD 1280x720 AVC AAC).mp4",
+                "H:/Videos/整理/玩伴猫耳娘/Asobi ni Iku yo! (BD 1280x720 AVC AAC)/Asobi ni Iku yo! - OVA (BD 1280x720 AVC AAC).mp4",
+            ]
         },
         {
             "name": ".NET Core Attach",
