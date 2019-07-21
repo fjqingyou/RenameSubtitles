@@ -173,10 +173,10 @@ public class RenameSubtitle{
             //输出匹配信息
             this.PrintMatchList();
 
-            Console.WriteLine("请确认上方的文件映射关系，确认无误输入Y确定重命名，其他字符取消本次操作，您的选择是？：");
+            Console.Write("请确认上方的文件映射关系，确认无误输入Y确定重命名，其他字符取消本次操作，您的选择是？：");
             ConsoleKeyInfo keyInfo = Console.ReadKey();
             if(keyInfo.KeyChar != 'y' && keyInfo.KeyChar != 'Y'){
-                Console.WriteLine("用户放弃本次操作！");
+                Console.WriteLine("\n用户放弃本次操作！");
             }else{
                 for(int i = 0 ; i < this.assetMatchList.Count; i++){
                     AssetMatch matchAsset = this.assetMatchList[i];
@@ -199,7 +199,7 @@ public class RenameSubtitle{
                     //重命名字幕文件
                     File.Move(originFilePath, targetFilePath);
                 }
-                Console.WriteLine("任务完成！");
+                Console.WriteLine("\n任务完成！");
             }
         }
     }
@@ -220,12 +220,63 @@ public class RenameSubtitle{
 
         for(int i = 0 ; i < this.videoFileList.Count; i++){
             AssetFile videoAssetFile = this.videoFileList[i];
-            int num = videoAssetFile.targetRangeTextNumber;
-            AssetFile subtitleAssetFile = this.subtitleFileList.Find( x => x.targetRangeTextNumber == num);
-            if(subtitleAssetFile != null){//如果找到匹配项了
+            
+            //先按照数字匹配
+            List<AssetFile> subtitleAssetFileList = null;
+
+            int ? numPtr = videoAssetFile.targetRangeTextNumber;
+
+            //先按照数字匹配
+            if(numPtr.HasValue){
+                int num = numPtr.Value;
+                subtitleAssetFileList = this.subtitleFileList.FindAll( x => x.targetRangeTextNumber == num);
+            }
+            
+            if(subtitleAssetFileList == null || subtitleAssetFileList.Count == 0){//如果数字没有匹配项
+                subtitleAssetFileList = new List<AssetFile>();
+                AssetFile templateAssetFile = this.videoFileList.Find(x => x.targetRangeTextNumber == 1);//至少有一个 1 吧，用它作为参照
+                if(templateAssetFile != null){//如果找到模板了
+                    int videoWeightRangeIndex = this.getMaxWeightRangeIndex(this.videoFileRangeWeightList);
+                    int subtitleWeightRangeIndex = this.getMaxWeightRangeIndex(this.subtitleFileRangeWeightList);
+                    Ranage videoRange = templateAssetFile.numberRanageList[videoWeightRangeIndex];
+                    string str1 = videoAssetFile.fileName.Substring(videoRange.start, videoRange.length);
+                    for(int j = 0 ; j < this.subtitleFileList.Count; j++){
+                        AssetFile subtitle = this.subtitleFileList[j];
+                        Ranage subtitleRange = templateAssetFile.numberRanageList[videoWeightRangeIndex];
+                        string str2 = subtitle.fileName.Substring(subtitleRange.start, subtitleRange.length);
+                        if(str2.Contains(str1)){
+                            subtitleAssetFileList.Add(subtitle);
+                        }
+                    }
+                }
+            }
+
+            //如果匹配成功才记录匹配数据
+            if(subtitleAssetFileList.Count > 0){//如果找到匹配项了
                 AssetMatch assetMatch = new AssetMatch();
                 assetMatch.video = videoAssetFile;
-                assetMatch.subtitle = subtitleAssetFile;
+                assetMatch.subtitleList = subtitleAssetFileList;
+                if(subtitleAssetFileList.Count == 1){
+                    assetMatch.subtitle = subtitleAssetFileList[0];//默认选择
+                }else{
+                    int index;
+                    for(;;){
+                        Console.WriteLine("视频：" + videoAssetFile.fileName);
+                        for(int j = 0 ; j < subtitleAssetFileList.Count; j++){
+                            Console.WriteLine("编号：{0} -> 字幕：{1}", j, subtitleAssetFileList[j].fileName);
+                        }
+                        Console.Write("视频出现同时多个字幕匹配，请选择目标字幕文件的编号：");
+                        string line = Console.ReadLine();
+                        if(int.TryParse(line, out index)){
+                            if(index < 0 || index > subtitleAssetFileList.Count){
+                                Console.WriteLine("\n输出错误，请输入正确的编号！");
+                            }else{
+                                assetMatch.subtitle = subtitleAssetFileList[index];
+                                break;
+                            }
+                        }
+                    }
+                }
                 assetMatchList.Add(assetMatch);
             }
         }
@@ -253,7 +304,7 @@ public class RenameSubtitle{
         //提取目标数字
         for(int i = 0 ; i < assetFileList.Count; i++){
             AssetFile assetFile = assetFileList[i];
-            int targetRangeTextNumber = int.MaxValue;//不能识别的都放置在最后
+            int ? targetRangeTextNumber = null;//不能识别的都放置在最后
 
             if(assetFile.numberRanageList.Count > videoFileRangeIndex){
                 Ranage ranage = assetFile.numberRanageList[videoFileRangeIndex];
@@ -270,7 +321,13 @@ public class RenameSubtitle{
     private void SortVideoFile(){
         //根据数字对视频文件进行排序
         this.videoFileList.Sort((x, y) =>{
-            return x.targetRangeTextNumber.CompareTo(y.targetRangeTextNumber);
+            if(x.targetRangeTextNumber == null){
+                return 1;
+            } else if(y.targetRangeTextNumber == null){
+                return -1;
+            }else{
+                return x.targetRangeTextNumber.Value.CompareTo(y.targetRangeTextNumber.Value);
+            }
         });
     }
 

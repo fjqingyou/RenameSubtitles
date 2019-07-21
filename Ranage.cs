@@ -4,4 +4,6 @@ public class Ranage{
     public int weight;
     public string text;
     public AssetFile assetFile;
+
+    public int length => end - start;
 }

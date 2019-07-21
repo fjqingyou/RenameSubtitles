@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 /// <summary>
 /// 资源匹配
 /// </summary>
@@ -8,7 +9,12 @@ public class AssetMatch{
     public AssetFile video;
 
     /// <summary>
-    /// 字幕
+    /// 目标字幕
     /// </summary>
     public AssetFile subtitle;
+
+    /// <summary>
+    /// 可选字幕列表
+    /// </summary>
+    public List<AssetFile> subtitleList;
 }
