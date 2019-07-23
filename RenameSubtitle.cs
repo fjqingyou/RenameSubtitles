@@ -44,6 +44,9 @@ public class RenameSubtitle{
             //匹配资源
             this.MatchAsset();
 
+            //处理重复引用字幕的情况
+            this.DoRepeatReferenceSubtitle();
+
             //准备执行重命名操作
             this.DoRaname();
         }catch(Exception e){
@@ -273,10 +276,14 @@ public class RenameSubtitle{
                             Console.WriteLine("编号：{0} -> 字幕：{1}", j, subtitleAssetFileList[j].fileName);
                         }
                         Console.Write("视频出现同时多个字幕匹配，请选择目标字幕文件的编号：");
+                        
+                        Console.Write("输入您的选择，并按回车键确认，您的选择：");
                         string line = Console.ReadLine();
+                        Console.WriteLine();
+
                         if(int.TryParse(line, out index)){
                             if(index < 0 || index > subtitleAssetFileList.Count){
-                                Console.WriteLine("\n输出错误，请输入正确的编号！");
+                                Console.WriteLine("输出错误，请输入正确的编号！");
                             }else{
                                 assetMatch.subtitle = subtitleAssetFileList[index];
                                 break;
@@ -285,6 +292,83 @@ public class RenameSubtitle{
                     }
                 }
                 assetMatchList.Add(assetMatch);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 处理重复引用字幕的情况
+    /// </summary>
+    private void DoRepeatReferenceSubtitle(){
+        //收集重复引用了相同字幕文件的视频
+        Dictionary<string, List<AssetMatch>> map = new Dictionary<string, List<AssetMatch>>();
+        for(int i = 0 ; i < assetMatchList.Count - 1; i++){
+            AssetMatch match1 = assetMatchList[i];
+            List<AssetMatch> list = null;
+            string fileName = match1.subtitle.fileName;
+            if(map.ContainsKey(fileName)){
+                list = map[fileName];
+                if(list.Contains(match1)){//如果当前文件已经被排除掉了
+                    continue;//那么直接开始下一个文件
+                }
+            }
+            for(int j = i + 1 ; j < assetMatchList.Count; j++){
+                AssetMatch match2 = assetMatchList[j];
+                if(fileName.Equals(match2.subtitle.fileName)){
+                    if(!map.ContainsKey(fileName)){
+                        list = new List<AssetMatch>();
+                        list.Add(match1);
+                        map[fileName] = list;
+                    }
+                    list.Add(match2);
+                }
+            }
+        }
+
+        if(map.Count > 0){//如果确实出现重复引用的情况了
+            //通知用户进入处理程序
+            for(;;){
+                Console.WriteLine("重复引用了字幕文件，即将进入处理程序，请按 y 键进入该程序！");
+                ConsoleKeyInfo keyInfo = Console.ReadKey();
+                Console.WriteLine("\n");//输出一下空白行
+                if(keyInfo.KeyChar == 'y' || keyInfo.KeyChar == 'Y'){
+                    break;
+                }
+            }
+
+            //开始处理
+            foreach(KeyValuePair<string,List<AssetMatch>> entry in map){
+                int index;
+                for(;;){
+                    Console.WriteLine("重复引用了字幕文件，请选择字幕匹配的视频文件编号。");
+                    Console.WriteLine("当前字幕文件：{0}", entry.Key);
+                    List<AssetMatch> matchList = entry.Value;
+                    for(int i = 0 ; i < matchList.Count; i++){
+                        AssetMatch match = matchList[i];
+                        Console.WriteLine("编号：{0} -> 字幕：{1}", i,  match.video.fileName);
+                    }
+
+                    Console.Write("输入您的选择，并按回车键确认，您的选择：");
+                    string line = Console.ReadLine();
+                    Console.WriteLine();
+
+                    if(int.TryParse(line, out index)){
+                        if(index < 0 || index > matchList.Count){
+                            Console.WriteLine("输出错误，请输入正确的编号！");
+                        }else{
+                            AssetMatch match = matchList[index];
+                            
+                            //待移除的列表中排除用户要保留的设置
+                            matchList.Remove(match);
+
+                            //移除掉不要的
+                            for(int i = 0 ; i < matchList.Count; i++){
+                                assetMatchList.Remove(matchList[i]);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
