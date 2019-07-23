@@ -13,12 +13,20 @@ public class RenameSubtitle{
     //范围的权重
     private List<int> videoFileRangeWeightList = new List<int>();
     private List<int> subtitleFileRangeWeightList = new List<int>();
-    
+    private Config config;
     static RenameSubtitle(){
         videoFileTypeList.Add("mp4");
         videoFileTypeList.Add("mkv");
 
         subtitleFileTypeList.Add("ass");
+    }
+
+    /// <summary>
+    /// 重命名字幕文件构造函数
+    /// </summary>
+    /// <param name="config">配置</param>
+    public RenameSubtitle(Config config){
+        this.config = config;
     }
 
     public void doWork(string [] args){
@@ -49,7 +57,7 @@ public class RenameSubtitle{
             this.SortVideoFile();
 
             //匹配资源
-            this.MatchAsset();
+            this.DoMatchAsset();
 
             //处理重复引用字幕的情况
             this.DoRepeatReferenceSubtitle();
@@ -232,7 +240,7 @@ public class RenameSubtitle{
     /// <summary>
     /// 匹配资源
     /// </summary>
-    private void MatchAsset(){
+    private void DoMatchAsset(){
         assetMatchList.Clear();
 
         for(int i = 0 ; i < this.videoFileList.Count; i++){
@@ -273,9 +281,18 @@ public class RenameSubtitle{
                 AssetMatch assetMatch = new AssetMatch();
                 assetMatch.video = videoAssetFile;
                 assetMatch.subtitleList = subtitleAssetFileList;
-                if(subtitleAssetFileList.Count == 1){
-                    assetMatch.subtitle = subtitleAssetFileList[0];//默认选择
-                }else{
+
+                //处理完全匹配
+                if(config.perfectMatch.enabled){//如果启用了完全匹配
+                    if(subtitleAssetFileList.Count > 1){//如果有多个匹配项
+                        this.DoPerfectMatch(assetMatch.video.displayNameSimplified, subtitleAssetFileList);
+                    }
+                }
+
+                //单匹配 和 多匹配处理
+                if(subtitleAssetFileList.Count == 1){//单匹配
+                    assetMatch.subtitle = subtitleAssetFileList[0];//直接取得就行了
+                }else{//多匹配
                     int index;
                     for(;;){
                         Console.WriteLine("视频：" + videoAssetFile.displayName);
@@ -312,26 +329,60 @@ public class RenameSubtitle{
         for(int i = 0 ; i < assetMatchList.Count - 1; i++){
             AssetMatch match1 = assetMatchList[i];
             List<AssetMatch> list = null;
-            string displayName = match1.subtitle.displayName;
-            if(map.ContainsKey(displayName)){
-                list = map[displayName];
+            string displayNameSimplified = match1.subtitle.displayNameSimplified;
+            if(map.ContainsKey(displayNameSimplified)){
+                list = map[displayNameSimplified];
                 if(list.Contains(match1)){//如果当前文件已经被排除掉了
                     continue;//那么直接开始下一个文件
                 }
             }
             for(int j = i + 1 ; j < assetMatchList.Count; j++){
                 AssetMatch match2 = assetMatchList[j];
-                if(displayName.Equals(match2.subtitle.displayName)){
-                    if(!map.ContainsKey(displayName)){
+                if(displayNameSimplified.Equals(match2.subtitle.displayNameSimplified)){
+                    if(!map.ContainsKey(displayNameSimplified)){
                         list = new List<AssetMatch>();
                         list.Add(match1);
-                        map[displayName] = list;
+                        map[displayNameSimplified] = list;
                     }
                     list.Add(match2);
                 }
             }
         }
 
+        //完全匹配处理
+        if(config.perfectMatch.enabled){//如果启用了完全匹配
+            if(map.Count > 0){//如果确实出现重复引用的情况了
+                List<string> removeKeyList = new List<string>();
+                //开始处理
+                foreach(KeyValuePair<string,List<AssetMatch>> entry in map){
+                    List<AssetMatch> matchList = entry.Value;
+                    List<AssetFile> matchAssetFileList = matchList.ConvertAll(x => x.video);
+
+                    this.DoPerfectMatch(entry.Key, matchAssetFileList);
+
+                    //排除掉不要的东西
+                    for(int i = 0 ; i < matchList.Count; i++){
+                        AssetMatch assetMatch = matchList[i];
+                        if(!matchAssetFileList.Contains(assetMatch.video)){//如果这个匹配已经不存在了
+                            assetMatchList.Remove(assetMatch);
+                            matchList.RemoveAt(i);
+                        }
+                    }
+
+                    if(matchList.Count == 1){//如只剩下一个匹配了
+                        removeKeyList.Add(entry.Key);
+                    }
+                }
+
+                //移除掉只剩下一个匹配的项
+                for(int i = 0 ; i < removeKeyList.Count; i++){
+                    map.Remove(removeKeyList[i]);
+                }
+            }
+        }
+
+
+        //单匹配 和 多匹配处理
         if(map.Count > 0){//如果确实出现重复引用的情况了
             //通知用户进入处理程序
             for(;;){
@@ -381,6 +432,30 @@ public class RenameSubtitle{
     }
 
     /// <summary>
+    /// 处理完全匹配
+    /// </summary>
+    /// <param name="displayNameSimplified"></param>
+    /// <param name="matchAssetFileList"></param>
+    private void DoPerfectMatch(string displayNameSimplified, List<AssetFile> matchAssetFileList){
+        if(displayNameSimplified.Length >= config.perfectMatch.count){//如果显示名称大于等于要求的字符数
+            int count = 0;
+            AssetFile assetFile = null;
+            for(int j = 0 ; j < matchAssetFileList.Count; j++){
+                AssetFile item = matchAssetFileList[j];
+                if(item.displayNameSimplified == displayNameSimplified){
+                    assetFile = item;
+                    count++;
+                }
+            }
+
+            if(count == 1){//如果只有一个完全匹配项
+                matchAssetFileList.Clear();//排除掉其他可能
+                matchAssetFileList.Add(assetFile);//记录当前的
+            }
+        }
+    }
+
+    /// <summary>
     /// 输出匹配信息
     /// </summary>
     private void PrintMatchList(){
@@ -403,6 +478,7 @@ public class RenameSubtitle{
         while('k' != Console.ReadKey().KeyChar){
 
         }
+        Console.WriteLine();//输出一个空白行
     }
 
     /// <summary>
@@ -423,13 +499,15 @@ public class RenameSubtitle{
         //视频
         for(int i = 0 ; i < this.videoFileList.Count; i++){
             AssetFile assetFile = this.videoFileList[i];
-            assetFile.displayName = this.SimplifiedDisplayName(assetFile.fileName, videoLeft, videoRight);
+            assetFile.displayNameSimplified = this.SimplifiedDisplayName(assetFile.fileName, videoLeft, videoRight);
+            assetFile.CalcDisplay();
         }
         
         //字幕
         for(int i = 0 ; i < this.subtitleFileList.Count; i++){
             AssetFile assetFile = this.subtitleFileList[i];
-            assetFile.displayName = this.SimplifiedDisplayName(assetFile.fileName, subtitleLeft, subtitleRight);
+            assetFile.displayNameSimplified = this.SimplifiedDisplayName(assetFile.fileName, subtitleLeft, subtitleRight);
+            assetFile.CalcDisplay();
         }
     }
 
@@ -461,13 +539,6 @@ public class RenameSubtitle{
         if(right > 0){
             fileNameShort = fileNameShort + simplifiedSymal;
         }
-
-        //确保存在文件扩展名，方便用户识别文件
-        string extName = Path.GetExtension(fileNameShort);
-        if(string.IsNullOrEmpty(extName)){//如果当前没文件扩展名
-            fileNameShort += Path.GetExtension(fileName);
-        }
-
         return fileNameShort;
     }
 
