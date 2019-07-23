@@ -23,12 +23,18 @@ public class RenameSubtitle{
 
     public void doWork(string [] args){
         try{
+            //等待调试器 - for debug
+            // this.WaitDebugger();
+
             //收集资源文件
             CollectAssetFile(args);
             
             //收集文件名中，出现数字的范围
             CollectAssetFileNumberRanage(this.videoFileList);//收集视频文件数字范围
             CollectAssetFileNumberRanage(this.subtitleFileList);//收集字幕文件数字范围
+
+            //执行简化名称功能
+            this.DoSimplifiedDisplayName();
 
             //初始化范围权重
             this.InitAssetFileRangeWeight(this.videoFileList, this.videoFileRangeWeightList);
@@ -271,9 +277,9 @@ public class RenameSubtitle{
                 }else{
                     int index;
                     for(;;){
-                        Console.WriteLine("视频：" + videoAssetFile.fileName);
+                        Console.WriteLine("视频：" + videoAssetFile.displayName);
                         for(int j = 0 ; j < subtitleAssetFileList.Count; j++){
-                            Console.WriteLine("编号：{0} -> 字幕：{1}", j, subtitleAssetFileList[j].fileName);
+                            Console.WriteLine("编号：{0} -> 字幕：{1}", j, subtitleAssetFileList[j].displayName);
                         }
                         Console.Write("视频出现同时多个字幕匹配，请选择目标字幕文件的编号：");
                         
@@ -305,20 +311,20 @@ public class RenameSubtitle{
         for(int i = 0 ; i < assetMatchList.Count - 1; i++){
             AssetMatch match1 = assetMatchList[i];
             List<AssetMatch> list = null;
-            string fileName = match1.subtitle.fileName;
-            if(map.ContainsKey(fileName)){
-                list = map[fileName];
+            string displayName = match1.subtitle.displayName;
+            if(map.ContainsKey(displayName)){
+                list = map[displayName];
                 if(list.Contains(match1)){//如果当前文件已经被排除掉了
                     continue;//那么直接开始下一个文件
                 }
             }
             for(int j = i + 1 ; j < assetMatchList.Count; j++){
                 AssetMatch match2 = assetMatchList[j];
-                if(fileName.Equals(match2.subtitle.fileName)){
-                    if(!map.ContainsKey(fileName)){
+                if(displayName.Equals(match2.subtitle.displayName)){
+                    if(!map.ContainsKey(displayName)){
                         list = new List<AssetMatch>();
                         list.Add(match1);
-                        map[fileName] = list;
+                        map[displayName] = list;
                     }
                     list.Add(match2);
                 }
@@ -345,7 +351,7 @@ public class RenameSubtitle{
                     List<AssetMatch> matchList = entry.Value;
                     for(int i = 0 ; i < matchList.Count; i++){
                         AssetMatch match = matchList[i];
-                        Console.WriteLine("编号：{0} -> 字幕：{1}", i,  match.video.fileName);
+                        Console.WriteLine("编号：{0} -> 字幕：{1}", i,  match.video.displayName);
                     }
 
                     Console.Write("输入您的选择，并按回车键确认，您的选择：");
@@ -379,9 +385,190 @@ public class RenameSubtitle{
     private void PrintMatchList(){
         //输出顺序
         for(int i = 0 ; i < this.assetMatchList.Count; i++){
-            string videoFileName = Path.GetFileName(this.assetMatchList[i].video.fileName);
-            string subtitleFileName = Path.GetFileName(this.assetMatchList[i].subtitle.fileName);
-            Console.WriteLine("{0} -> {1}", videoFileName, subtitleFileName);
+            //取得显示名称
+            string videoDisplayName = Path.GetFileName(this.assetMatchList[i].video.displayName);
+            string subtitleDisplayName = Path.GetFileName(this.assetMatchList[i].subtitle.displayName);
+
+            //输出名字
+            Console.WriteLine("{0} -> {1}", videoDisplayName, subtitleDisplayName);
+        }
+    }
+
+    /// <summary>
+    /// 等待附加 - 当前这个是一个模拟的
+    /// </summary>
+    private void WaitDebugger(){
+        Console.WriteLine("请在调试器附加后，输入按键 k 进入程序！");
+        while('k' != Console.ReadKey().KeyChar){
+
+        }
+    }
+
+    /// <summary>
+    /// 执行名称简化操作
+    /// </summary>
+    private void DoSimplifiedDisplayName(){
+        int videoLeft = 0, videoRight = 0;
+        int subtitleLeft = 0, subtitleRight = 0;
+
+        //转化数据类型
+        List<string> videoFileNameList = this.videoFileList.ConvertAll(x => x.fileName);
+        List<string> subtitleFileNameList = this.subtitleFileList.ConvertAll(x => x.fileName);
+
+        //收集简化的显示名称
+        this.CollectSimplifiedDisplayName(videoFileNameList, out videoLeft, out videoRight);
+        this.CollectSimplifiedDisplayName(subtitleFileNameList, out subtitleLeft, out subtitleRight);
+        
+        //视频
+        for(int i = 0 ; i < this.videoFileList.Count; i++){
+            AssetFile assetFile = this.videoFileList[i];
+            assetFile.displayName = this.SimplifiedDisplayName(assetFile.fileName, videoLeft, videoRight);
+        }
+        
+        //字幕
+        for(int i = 0 ; i < this.subtitleFileList.Count; i++){
+            AssetFile assetFile = this.subtitleFileList[i];
+            assetFile.displayName = this.SimplifiedDisplayName(assetFile.fileName, subtitleLeft, subtitleRight);
+        }
+    }
+
+    /// <summary>
+    /// 简化名称
+    /// </summary>
+    /// <param name="fileName">原始名称</param>
+    /// <param name="left">左边移除的数量</param>
+    /// <param name="right">右边简化的数量</param>
+    /// <returns></returns>
+    private string SimplifiedDisplayName(string fileName, int left, int right){
+        //计算出短名字
+        string fileNameShort = fileName;
+
+        //简化后占位显示的部分
+        string simplifiedSymal = "~~~";
+
+        if(left > simplifiedSymal.Length){
+            fileNameShort = fileNameShort.Substring(left);
+        }
+
+        if(right > simplifiedSymal.Length){
+            fileNameShort = fileNameShort.Substring(0, fileNameShort.Length - right);
+        }
+
+        if(left > 0){
+            fileNameShort = simplifiedSymal +  fileNameShort;
+        }
+        if(right > 0){
+            fileNameShort = fileNameShort + simplifiedSymal;
+        }
+
+        //确保存在文件扩展名，方便用户识别文件
+        string extName = Path.GetExtension(fileNameShort);
+        if(string.IsNullOrEmpty(extName)){//如果当前没文件扩展名
+            fileNameShort += Path.GetExtension(fileName);
+        }
+
+        return fileNameShort;
+    }
+
+    /// <summary>
+    /// 收集简化的显示名称
+    /// </summary>
+    /// <param name="list"></param>
+    /// <param name="left"></param>
+    /// <param name="right"></param>
+    private void CollectSimplifiedDisplayName(List<string> list, out int left, out int right){
+        left = 0;
+        right = 0;
+
+        //获得最大的字符串长度
+        int length = 0;
+        for(int i = 0 ; i < list.Count; i++){
+            if(list[i].Length > length){
+                length = list[i].Length;
+            }
+        }
+
+        if(length > 0){//如果有内容，那么才有必要继续执行
+            //查找完成的标志
+            bool leftEQFinshed = false;
+            bool rightEQFinshed = false;
+
+            for(int n = 0 ; n < length; n++){
+                //left
+                if(!leftEQFinshed){
+                    for(int i = 0 ; i < list.Count - 1; i++){
+                        string item1 = list[i];
+                        if(item1.Length <= left){//如果长度小于目标
+                            break;//那么就是已经是结束了
+                        }
+
+                        char c1 = item1[left];
+                        for(int j = i + 1 ; j < list.Count; j++){
+                            string item2 = list[j];
+                            if(item1.Length <= left){//如果长度小于目标
+                                leftEQFinshed = true;
+                                break;//那么就是已经是结束了
+                            }
+
+                            char c2 = item2[left];
+                            if(c1 != c2){
+                                leftEQFinshed = true;
+                                break;
+                            }
+                        }
+
+                        if(leftEQFinshed){
+                            break;
+                        }
+                    }
+
+                    //索引项
+                    if(!leftEQFinshed){
+                        left++;
+                    }
+                }
+
+                //right
+                if(!rightEQFinshed){
+                    for(int i = 0 ; i < list.Count - 1; i++){
+                        string item1 = list[i];
+                        if(item1.Length <= right){//如果长度小于目标
+                            break;//那么就是已经是结束了
+                        }
+
+                        char c1 = item1[item1.Length - right - 1];
+                        for(int j = i + 1 ; j < list.Count; j++){
+                            string item2 = list[j];
+                            if(item1.Length <= right){//如果长度小于目标
+                                rightEQFinshed = true;
+                                break;//那么就是已经是结束了
+                            }
+
+                            char c2 = item2[item2.Length - right - 1];
+                            if(c1 != c2){
+                                rightEQFinshed = true;
+                                break;
+                            }
+                        }
+
+                        if(rightEQFinshed){
+                            break;
+                        }
+
+                    }
+
+                    //索引项
+                    if(!rightEQFinshed){
+                        right++;
+                    }
+                }
+
+                
+                //判定任务是否已经完成了
+                if(leftEQFinshed && rightEQFinshed){//如果两个任务都完成了
+                    break;
+                }
+            }
         }
     }
 
