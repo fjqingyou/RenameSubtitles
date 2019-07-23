@@ -24,17 +24,18 @@ public class RenameSubtitle{
     public void doWork(string [] args){
         try{
             //等待调试器 - for debug
-            // this.WaitDebugger();
+            this.WaitDebugger();
 
             //收集资源文件
             CollectAssetFile(args);
+            
+            //执行简化名称功能
+            this.DoSimplifiedDisplayName();
             
             //收集文件名中，出现数字的范围
             CollectAssetFileNumberRanage(this.videoFileList);//收集视频文件数字范围
             CollectAssetFileNumberRanage(this.subtitleFileList);//收集字幕文件数字范围
 
-            //执行简化名称功能
-            this.DoSimplifiedDisplayName();
 
             //初始化范围权重
             this.InitAssetFileRangeWeight(this.videoFileList, this.videoFileRangeWeightList);
@@ -145,13 +146,13 @@ public class RenameSubtitle{
         for (int i = 0; i < assetFileList.Count; i++){
             AssetFile assetFile = assetFileList[i];
             Ranage ranage = null;
-            string file = assetFile.fileName;
+            string displayName = assetFile.displayName;
 
             List<Ranage> numberRanageList = assetFile.numberRanageList;
             numberRanageList.Clear();
 
-            for(int j = 0; j < file.Length; j++){
-                char c = file[j];
+            for(int j = 0; j < displayName.Length; j++){
+                char c = displayName[j];
                 if(c >= '0' && c <= '9'){//如果这个字符是数字
                     if(ranage == null){
                         ranage = new Ranage();
@@ -162,7 +163,7 @@ public class RenameSubtitle{
                 }else{//如果这个字符不是数字
                     if(ranage != null){
                         ranage.end = j;
-                        ranage.text = file.Substring(ranage.start, ranage.end - ranage.start);
+                        ranage.text = displayName.Substring(ranage.start, ranage.end - ranage.start);
                         numberRanageList.Add(ranage);
                         ranage = null;
                     }
@@ -283,7 +284,7 @@ public class RenameSubtitle{
                         }
                         Console.Write("视频出现同时多个字幕匹配，请选择目标字幕文件的编号：");
                         
-                        Console.Write("输入您的选择，并按回车键确认，您的选择：");
+                        Console.Write("请输入您的选择，并按回车键确认，您的选择：");
                         string line = Console.ReadLine();
                         Console.WriteLine();
 
@@ -354,7 +355,7 @@ public class RenameSubtitle{
                         Console.WriteLine("编号：{0} -> 字幕：{1}", i,  match.video.displayName);
                     }
 
-                    Console.Write("输入您的选择，并按回车键确认，您的选择：");
+                    Console.Write("请输入您的选择，并按回车键确认，您的选择：");
                     string line = Console.ReadLine();
                     Console.WriteLine();
 
