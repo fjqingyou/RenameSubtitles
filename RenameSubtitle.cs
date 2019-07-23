@@ -32,7 +32,7 @@ public class RenameSubtitle{
     public void doWork(string [] args){
         try{
             //等待调试器 - for debug
-            this.WaitDebugger();
+            // this.WaitDebugger();
 
             //收集资源文件
             CollectAssetFile(args);
