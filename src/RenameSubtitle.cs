@@ -552,93 +552,95 @@ public class RenameSubtitle{
         left = 0;
         right = 0;
 
-        //获得最大的字符串长度
-        int length = 0;
-        for(int i = 0 ; i < list.Count; i++){
-            if(list[i].Length > length){
-                length = list[i].Length;
+        if(list.Count > 1){//布置一个文件的时候才有缩减的条件
+            //获得最大的字符串长度
+            int length = 0;
+            for(int i = 0 ; i < list.Count; i++){
+                if(list[i].Length > length){
+                    length = list[i].Length;
+                }
             }
-        }
 
-        if(length > 0){//如果有内容，那么才有必要继续执行
-            //查找完成的标志
-            bool leftEQFinshed = false;
-            bool rightEQFinshed = false;
+            if(length > 0){//如果有内容，那么才有必要继续执行
+                //查找完成的标志
+                bool leftEQFinshed = false;
+                bool rightEQFinshed = false;
 
-            for(int n = 0 ; n < length; n++){
-                //left
-                if(!leftEQFinshed){
-                    for(int i = 0 ; i < list.Count - 1; i++){
-                        string item1 = list[i];
-                        if(item1.Length <= left){//如果长度小于目标
-                            break;//那么就是已经是结束了
-                        }
-
-                        char c1 = item1[left];
-                        for(int j = i + 1 ; j < list.Count; j++){
-                            string item2 = list[j];
-                            if(item1.Length <= left){//如果长度小于目标
-                                leftEQFinshed = true;
-                                break;//那么就是已经是结束了
-                            }
-
-                            char c2 = item2[left];
-                            if(c1 != c2){
-                                leftEQFinshed = true;
-                                break;
-                            }
-                        }
-
-                        if(leftEQFinshed){
-                            break;
-                        }
-                    }
-
-                    //索引项
+                for(int n = 0 ; n < length; n++){
+                    //left
                     if(!leftEQFinshed){
-                        left++;
-                    }
-                }
-
-                //right
-                if(!rightEQFinshed){
-                    for(int i = 0 ; i < list.Count - 1; i++){
-                        string item1 = list[i];
-                        if(item1.Length <= right){//如果长度小于目标
-                            break;//那么就是已经是结束了
-                        }
-
-                        char c1 = item1[item1.Length - right - 1];
-                        for(int j = i + 1 ; j < list.Count; j++){
-                            string item2 = list[j];
-                            if(item1.Length <= right){//如果长度小于目标
-                                rightEQFinshed = true;
+                        for(int i = 0 ; i < list.Count - 1; i++){
+                            string item1 = list[i];
+                            if(item1.Length <= left){//如果长度小于目标
                                 break;//那么就是已经是结束了
                             }
 
-                            char c2 = item2[item2.Length - right - 1];
-                            if(c1 != c2){
-                                rightEQFinshed = true;
+                            char c1 = item1[left];
+                            for(int j = i + 1 ; j < list.Count; j++){
+                                string item2 = list[j];
+                                if(item1.Length <= left){//如果长度小于目标
+                                    leftEQFinshed = true;
+                                    break;//那么就是已经是结束了
+                                }
+
+                                char c2 = item2[left];
+                                if(c1 != c2){
+                                    leftEQFinshed = true;
+                                    break;
+                                }
+                            }
+
+                            if(leftEQFinshed){
                                 break;
                             }
                         }
 
-                        if(rightEQFinshed){
-                            break;
+                        //索引项
+                        if(!leftEQFinshed){
+                            left++;
+                        }
+                    }
+
+                    //right
+                    if(!rightEQFinshed){
+                        for(int i = 0 ; i < list.Count - 1; i++){
+                            string item1 = list[i];
+                            if(item1.Length <= right){//如果长度小于目标
+                                break;//那么就是已经是结束了
+                            }
+
+                            char c1 = item1[item1.Length - right - 1];
+                            for(int j = i + 1 ; j < list.Count; j++){
+                                string item2 = list[j];
+                                if(item1.Length <= right){//如果长度小于目标
+                                    rightEQFinshed = true;
+                                    break;//那么就是已经是结束了
+                                }
+
+                                char c2 = item2[item2.Length - right - 1];
+                                if(c1 != c2){
+                                    rightEQFinshed = true;
+                                    break;
+                                }
+                            }
+
+                            if(rightEQFinshed){
+                                break;
+                            }
+
                         }
 
+                        //索引项
+                        if(!rightEQFinshed){
+                            right++;
+                        }
                     }
 
-                    //索引项
-                    if(!rightEQFinshed){
-                        right++;
+                    
+                    //判定任务是否已经完成了
+                    if(leftEQFinshed && rightEQFinshed){//如果两个任务都完成了
+                        break;
                     }
-                }
-
-                
-                //判定任务是否已经完成了
-                if(leftEQFinshed && rightEQFinshed){//如果两个任务都完成了
-                    break;
                 }
             }
         }
