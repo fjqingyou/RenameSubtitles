@@ -19,6 +19,7 @@ public class RenameSubtitle{
         videoFileTypeList.Add("mkv");
 
         subtitleFileTypeList.Add("ass");
+        subtitleFileTypeList.Add("ssa");
     }
 
     /// <summary>
