@@ -15,6 +15,8 @@ namespace RenameSubtitles{
             //视频文件忽略的部分
             config.videoFileIgnoreList.Add(" Vol.");
             config.videoFileIgnoreList.Add(" SP ");
+            config.videoFileIgnoreList.Add(" NCOP ");
+            config.videoFileIgnoreList.Add(" Menu ");
 
             //视频文件类型
             config.videoFileTypeList.Add("mkv");
