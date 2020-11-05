@@ -119,15 +119,23 @@ public class RenameSubtitle{
             }
 
             //排除视频文件用户忽略的部分
+            List<AssetFile> removeVideoFileList = new List<AssetFile>();
             for(int i = 0; i < videoFileList.Count; i++){
                 AssetFile videoFile = videoFileList[i];
                 string fileName = videoFile.fileName;
                 for(int j = 0; j < this.config.videoFileIgnoreList.Count; j++){
                     if(fileName.Contains(this.config.videoFileIgnoreList[j])){
                         videoFileList.RemoveAt(i--);
+                        removeVideoFileList.Add(videoFile);
                         break;
                     }
                 }
+            }
+
+            //如果移除用户忽略的文件后，没视频文件可以匹配。说明是用户故意选择忽略的部分，所以本次不忽略了
+            if(videoFileList.Count == 0 && removeVideoFileList.Count > 0){
+                //添加回去
+                videoFileList.AddRange(removeVideoFileList);
             }
         }
     }
