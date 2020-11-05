@@ -3,8 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 
 public class RenameSubtitle{
-    private static List<string> videoFileTypeList = new List<string>();
-    private static List<string> subtitleFileTypeList = new List<string>();
     private string targetDirectory;
     private List<AssetFile> videoFileList = new List<AssetFile>();
     private List<AssetFile> subtitleFileList = new List<AssetFile>();
@@ -14,13 +12,6 @@ public class RenameSubtitle{
     private List<int> videoFileRangeWeightList = new List<int>();
     private List<int> subtitleFileRangeWeightList = new List<int>();
     private Config config;
-    static RenameSubtitle(){
-        videoFileTypeList.Add("mp4");
-        videoFileTypeList.Add("mkv");
-
-        subtitleFileTypeList.Add("ass");
-        subtitleFileTypeList.Add("ssa");
-    }
 
     /// <summary>
     /// 重命名字幕文件构造函数
@@ -90,8 +81,8 @@ public class RenameSubtitle{
                 string [] files = Directory.GetFiles(targetDirectory);
 
                 //文件分类
-                FileClassification(files, videoFileList, videoFileTypeList);
-                FileClassification(files, subtitleFileList, subtitleFileTypeList);
+                FileClassification(files, videoFileList, this.config.videoFileTypeList);
+                FileClassification(files, subtitleFileList, this.config.subtitleFileTypeList);
             }else{
                 bool allIsFile = true;
                 //那么这里就是多选了
@@ -123,8 +114,8 @@ public class RenameSubtitle{
                 this.targetDirectory = targetDirectory;
                 
                 //文件分类
-                FileClassification(args, videoFileList, videoFileTypeList);
-                FileClassification(args, subtitleFileList, subtitleFileTypeList);
+                FileClassification(args, videoFileList, this.config.videoFileTypeList);
+                FileClassification(args, subtitleFileList, this.config.subtitleFileTypeList);
             }
         }
     }
@@ -297,6 +288,11 @@ public class RenameSubtitle{
                     int index;
                     for(;;){
                         Console.WriteLine("视频：" + videoAssetFile.displayName);
+
+                        //排序
+                        subtitleAssetFileList.Sort((x, y) => x.displayName.CompareTo(y.displayName));
+
+                        //输出选项
                         for(int j = 0 ; j < subtitleAssetFileList.Count; j++){
                             Console.WriteLine("编号：{0} -> 字幕：{1}", j, subtitleAssetFileList[j].displayName);
                         }
@@ -402,6 +398,9 @@ public class RenameSubtitle{
                     Console.WriteLine("重复引用了字幕文件，请选择字幕匹配的视频文件编号。");
                     Console.WriteLine("当前字幕文件：{0}", entry.Key);
                     List<AssetMatch> matchList = entry.Value;
+
+                    //显示排序
+                    matchList.Sort((x, y) => x.video.displayName.CompareTo(y.video.displayName));
                     for(int i = 0 ; i < matchList.Count; i++){
                         AssetMatch match = matchList[i];
                         Console.WriteLine("编号：{0} -> 字幕：{1}", i,  match.video.displayName);
@@ -438,7 +437,7 @@ public class RenameSubtitle{
     /// <param name="displayNameSimplified"></param>
     /// <param name="matchAssetFileList"></param>
     private void DoPerfectMatch(string displayNameSimplified, List<AssetFile> matchAssetFileList){
-        if(displayNameSimplified.Length >= config.perfectMatch.count){//如果显示名称大于等于要求的字符数
+        if(displayNameSimplified.Length >= config.perfectMatch.minCharCount){//如果显示名称大于等于要求的字符数
             int count = 0;
             AssetFile assetFile = null;
             for(int j = 0 ; j < matchAssetFileList.Count; j++){
@@ -553,7 +552,7 @@ public class RenameSubtitle{
         left = 0;
         right = 0;
 
-        if(list.Count > 1){//布置一个文件的时候才有缩减的条件
+        if(list.Count > 1){//不止一个文件的时候才有缩减的条件
             //获得最大的字符串长度
             int length = 0;
             for(int i = 0 ; i < list.Count; i++){
