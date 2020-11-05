@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 public class RenameSubtitle{
     private string targetDirectory;
@@ -123,8 +124,9 @@ public class RenameSubtitle{
             for(int i = 0; i < videoFileList.Count; i++){
                 AssetFile videoFile = videoFileList[i];
                 string fileName = videoFile.fileName;
-                for(int j = 0; j < this.config.videoFileIgnoreList.Count; j++){
-                    if(fileName.Contains(this.config.videoFileIgnoreList[j])){
+                for(int j = 0; j < this.config.videoFileIgnoreRegList.Count; j++){
+                    var matches = Regex.Matches(fileName, this.config.videoFileIgnoreRegList[j]);
+                    if(matches.Count > 0){
                         videoFileList.RemoveAt(i--);
                         removeVideoFileList.Add(videoFile);
                         break;

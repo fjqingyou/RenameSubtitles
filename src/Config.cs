@@ -21,7 +21,7 @@ public class Config{
     /// </summary>
     /// <typeparam name="string"></typeparam>
     /// <returns></returns>
-    public List<string> videoFileIgnoreList = new List<string>();
+    public List<string> videoFileIgnoreRegList = new List<string>();
 
     /// <summary>
     /// 完全匹配
