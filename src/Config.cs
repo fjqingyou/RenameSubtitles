@@ -15,6 +15,14 @@ public class Config{
     /// </summary>
     public List<string> subtitleFileTypeList = new List<string>();
 
+
+    /// <summary>
+    /// 视频文件忽略列表
+    /// </summary>
+    /// <typeparam name="string"></typeparam>
+    /// <returns></returns>
+    public List<string> videoFileIgnoreList = new List<string>();
+
     /// <summary>
     /// 完全匹配
     /// </summary>

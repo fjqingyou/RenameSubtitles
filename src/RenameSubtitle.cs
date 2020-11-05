@@ -117,6 +117,18 @@ public class RenameSubtitle{
                 FileClassification(args, videoFileList, this.config.videoFileTypeList);
                 FileClassification(args, subtitleFileList, this.config.subtitleFileTypeList);
             }
+
+            //排除视频文件用户忽略的部分
+            for(int i = 0; i < videoFileList.Count; i++){
+                AssetFile videoFile = videoFileList[i];
+                string fileName = videoFile.fileName;
+                for(int j = 0; j < this.config.videoFileIgnoreList.Count; j++){
+                    if(fileName.Contains(this.config.videoFileIgnoreList[j])){
+                        videoFileList.RemoveAt(i--);
+                        break;
+                    }
+                }
+            }
         }
     }
 

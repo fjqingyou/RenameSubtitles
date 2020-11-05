@@ -12,6 +12,10 @@ namespace RenameSubtitles{
             config.perfectMatch.enabled = true;
             config.perfectMatch.minCharCount = 2;
 
+            //视频文件忽略的部分
+            config.videoFileIgnoreList.Add(" Vol.");
+            config.videoFileIgnoreList.Add(" SP ");
+
             //视频文件类型
             config.videoFileTypeList.Add("mkv");
             config.videoFileTypeList.Add("mp4");
