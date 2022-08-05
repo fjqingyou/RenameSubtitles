@@ -205,11 +205,11 @@ public class RenameSubtitle{
             //输出匹配信息
             this.PrintMatchList();
 
-            Console.Write("请确认上方的文件映射关系，确认无误输入Y确定重命名，其他字符取消本次操作，您的选择是？：");
+            Console.Write("请确认上方的文件映射关系，确认无误输入Y或者直接回车确定重命名，其他字符取消本次操作，您的选择是 Y/n：");
             ConsoleKeyInfo keyInfo = Console.ReadKey();
             Console.WriteLine("\n");//输出一下空白行
-            if(keyInfo.KeyChar != 'y' && keyInfo.KeyChar != 'Y'){
-                Console.WriteLine("用户放弃本次操作！");
+            if(keyInfo.KeyChar != 'y' && keyInfo.KeyChar != 'Y' && keyInfo.Key != ConsoleKey.Enter){
+                Console.WriteLine("用户放弃本次操作！ 您输入的是：" + keyInfo.KeyChar);
             }else{
                 for(int i = 0 ; i < this.assetMatchList.Count; i++){
                     AssetMatch matchAsset = this.assetMatchList[i];
