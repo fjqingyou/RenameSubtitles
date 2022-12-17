@@ -62,7 +62,7 @@ public class RenameSubtitle{
         }
 
         //等待按键退出
-        this.WaitKeyExit();
+        // this.WaitKeyExit();
     }
 
     /// <summary>
@@ -325,7 +325,7 @@ public class RenameSubtitle{
                         Console.WriteLine();
 
                         if(int.TryParse(line, out index)){
-                            if(index < 0 || index > subtitleAssetFileList.Count){
+                            if(index < 0 || index >= subtitleAssetFileList.Count){
                                 Console.WriteLine("输出错误，请输入正确的编号！");
                             }else{
                                 assetMatch.subtitle = subtitleAssetFileList[index];
@@ -433,7 +433,7 @@ public class RenameSubtitle{
                     Console.WriteLine();
 
                     if(int.TryParse(line, out index)){
-                        if(index < 0 || index > matchList.Count){
+                        if(index < 0 || index >= matchList.Count){
                             Console.WriteLine("输出错误，请输入正确的编号！");
                         }else{
                             AssetMatch match = matchList[index];

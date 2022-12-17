@@ -23,6 +23,11 @@
 
 >鼠标按住不放，拖到 RenameSubtitles.bat 文件上面放开鼠标
 
+## 编译
+``` shell
+dotnet build
+```
+
 ## 参与开发
 
 >欢迎提交任意有益的合并请求
