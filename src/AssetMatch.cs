@@ -2,7 +2,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 资源匹配
 /// </summary>
-public class AssetMatch{
+public class AssetMatch {
     /// <summary>
     /// 视频
     /// </summary>
